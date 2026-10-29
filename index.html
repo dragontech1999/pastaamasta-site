@@ -1,0 +1,230 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PastaaMasta — Stop spaghetti prints before they start</title>
+<meta name="description" content="PastaaMasta is an FDM STL failure analyzer for Mac. Detect overhangs, thin walls, islands and spaghetti risk before you print, then get AI slicer recommendations.">
+<meta property="og:title" content="PastaaMasta — FDM STL Failure Analyzer">
+<meta property="og:description" content="Detect print failures before they happen. Analyze your STL locally on your Mac.">
+<meta property="og:url" content="https://www.pastaamasta.com/">
+<meta name="theme-color" content="#0b1220">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🍝</text></svg>">
+<style>
+  :root {
+    --brand: #21c4e8;
+    --brand-2: #7c5cff;
+    --bg: #0b1220;
+    --surface: #121b2e;
+    --border: #22304d;
+    --text: #e8eefc;
+    --muted: #9aa8c7;
+    --crit: #ff5d5d; --high: #ff9f43; --med: #ffd166; --low: #3ddc97;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font: 16px/1.6 -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Inter, Roboto, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  a { color: var(--brand); text-decoration: none; }
+  .wrap { max-width: 1120px; margin: 0 auto; padding: 0 24px; }
+
+  header {
+    position: sticky; top: 0; z-index: 10;
+    background: rgba(11,18,32,.75); backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+  }
+  header .wrap { display: flex; align-items: center; justify-content: space-between; height: 64px; }
+  .logo { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 20px; color: var(--text); }
+  .logo .mark {
+    width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center;
+    background: linear-gradient(135deg, var(--brand), var(--brand-2)); font-size: 18px;
+  }
+  nav a { color: var(--muted); margin-left: 24px; font-size: 15px; }
+  nav a:hover { color: var(--text); }
+
+  .hero { padding: 96px 0 72px; text-align: center; position: relative; overflow: hidden; }
+  .hero::before {
+    content: ""; position: absolute; inset: -40% -20% auto; height: 700px; z-index: -1;
+    background: radial-gradient(closest-side, rgba(33,196,232,.22), transparent 70%),
+                radial-gradient(closest-side at 70% 40%, rgba(124,92,255,.18), transparent 70%);
+  }
+  .pill {
+    display: inline-block; padding: 6px 14px; border-radius: 999px; font-size: 13px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    background: rgba(33,196,232,.12); color: var(--brand); border: 1px solid rgba(33,196,232,.3);
+  }
+  h1 { font-size: clamp(38px, 6vw, 68px); line-height: 1.05; margin: 22px 0 18px; letter-spacing: -0.02em; }
+  h1 span { background: linear-gradient(90deg, var(--brand), var(--brand-2)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .lead { color: var(--muted); font-size: 19px; max-width: 680px; margin: 0 auto 34px; }
+  .cta { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
+  .btn {
+    display: inline-flex; align-items: center; gap: 8px; padding: 14px 24px; border-radius: 12px;
+    font-weight: 600; font-size: 16px; border: 1px solid var(--border); color: var(--text); background: var(--surface);
+  }
+  .btn.primary { background: linear-gradient(135deg, var(--brand), #1a9fd0); border-color: transparent; color: #04121a; }
+  .btn:hover { transform: translateY(-1px); }
+
+  .mock {
+    margin: 64px auto 0; max-width: 960px; border-radius: 16px; border: 1px solid var(--border);
+    background: var(--surface); box-shadow: 0 40px 120px rgba(0,0,0,.5); overflow: hidden; text-align: left;
+  }
+  .mock .bar { display: flex; gap: 8px; padding: 12px 16px; border-bottom: 1px solid var(--border); }
+  .mock .bar i { width: 12px; height: 12px; border-radius: 50%; background: #3a4560; display: block; }
+  .mock .bar i:nth-child(1) { background: #ff5f57; } .mock .bar i:nth-child(2) { background: #febc2e; } .mock .bar i:nth-child(3) { background: #28c840; }
+  .mock .body { display: grid; grid-template-columns: 220px 1fr 240px; min-height: 340px; }
+  .mock .col { padding: 20px; border-right: 1px solid var(--border); }
+  .mock .col:last-child { border-right: 0; }
+  .label { font: 600 11px/1 ui-monospace, Menlo, monospace; letter-spacing: .08em; color: var(--muted); margin-bottom: 14px; }
+  .field { display: flex; justify-content: space-between; font-size: 13px; padding: 8px 0; border-bottom: 1px dashed var(--border); color: var(--muted); }
+  .field b { color: var(--text); font-weight: 600; }
+  .score { display: flex; align-items: center; gap: 22px; margin-bottom: 18px; }
+  .ring {
+    width: 108px; height: 108px; border-radius: 50%; display: grid; place-items: center;
+    background: conic-gradient(var(--low) 0 78%, #26324d 78% 100%);
+  }
+  .ring div { width: 86px; height: 86px; border-radius: 50%; background: var(--surface); display: grid; place-items: center; font-weight: 800; font-size: 28px; }
+  .issue { display: flex; gap: 10px; align-items: flex-start; font-size: 13px; padding: 10px 12px; border-radius: 10px; background: #0f1729; margin-bottom: 8px; }
+  .dot { width: 9px; height: 9px; border-radius: 50%; margin-top: 6px; flex: none; }
+  .chat p { font-size: 13px; background: #0f1729; padding: 10px 12px; border-radius: 10px; margin: 0 0 8px; color: var(--muted); }
+  .chat p.me { background: rgba(33,196,232,.14); color: var(--text); margin-left: 24px; }
+
+  section { padding: 88px 0; }
+  h2 { font-size: clamp(28px, 4vw, 40px); margin: 0 0 12px; letter-spacing: -0.01em; text-align: center; }
+  .sub { color: var(--muted); text-align: center; max-width: 620px; margin: 0 auto 48px; }
+  .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 26px; }
+  .card .ic { font-size: 26px; margin-bottom: 12px; }
+  .card h3 { margin: 0 0 8px; font-size: 18px; }
+  .card p { margin: 0; color: var(--muted); font-size: 15px; }
+
+  .steps { counter-reset: s; display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+  .step { position: relative; padding: 26px; border-radius: 16px; border: 1px solid var(--border); }
+  .step::before {
+    counter-increment: s; content: counter(s); display: grid; place-items: center;
+    width: 36px; height: 36px; border-radius: 10px; margin-bottom: 14px; font-weight: 800;
+    background: linear-gradient(135deg, var(--brand), var(--brand-2)); color: #04121a;
+  }
+  .step h3 { margin: 0 0 6px; font-size: 18px; }
+  .step p { margin: 0; color: var(--muted); font-size: 15px; }
+
+  .privacy { background: linear-gradient(135deg, rgba(33,196,232,.10), rgba(124,92,255,.10)); border: 1px solid var(--border); border-radius: 20px; padding: 44px; text-align: center; }
+  .privacy p { color: var(--muted); max-width: 640px; margin: 0 auto; }
+
+  footer { border-top: 1px solid var(--border); padding: 32px 0; color: var(--muted); font-size: 14px; }
+  footer .wrap { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
+
+  @media (max-width: 860px) {
+    .grid, .steps { grid-template-columns: 1fr; }
+    .mock .body { grid-template-columns: 1fr; }
+    .mock .col { border-right: 0; border-bottom: 1px solid var(--border); }
+    nav a:not(.keep) { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <a class="logo" href="#"><span class="mark">🍝</span> PastaaMasta</a>
+    <nav>
+      <a href="#features">Features</a>
+      <a href="#how">How it works</a>
+      <a class="keep" href="mailto:neebermandigital@gmail.com?subject=PastaaMasta">Contact</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <div class="hero">
+    <div class="wrap">
+      <span class="pill">FDM STL Failure Analyzer · for Mac</span>
+      <h1>Detect print failures<br><span>before they happen</span></h1>
+      <p class="lead">Drop in your STL and PastaaMasta checks mesh integrity, overhangs, thin walls, islands and spaghetti risk, then gives you AI-generated slicer settings to fix them.</p>
+      <div class="cta">
+        <a class="btn primary" href="mailto:neebermandigital@gmail.com?subject=PastaaMasta%20early%20access">Get early access</a>
+        <a class="btn" href="#features">See what it checks</a>
+      </div>
+
+      <div class="mock" aria-hidden="true">
+        <div class="bar"><i></i><i></i><i></i></div>
+        <div class="body">
+          <div class="col">
+            <div class="label">PRINTER PROFILE</div>
+            <div class="field">Nozzle <b>0.4 mm</b></div>
+            <div class="field">Layer height <b>0.20 mm</b></div>
+            <div class="field">Material <b>PLA</b></div>
+            <div class="field">Speed <b>60 mm/s</b></div>
+            <div class="field">Infill <b>20%</b></div>
+          </div>
+          <div class="col">
+            <div class="score">
+              <div class="ring"><div>78</div></div>
+              <div><div class="label" style="margin:0 0 6px">PRINTABILITY</div><div style="color:var(--muted);font-size:14px">3 issues found<br>184,220 triangles processed</div></div>
+            </div>
+            <div class="issue"><span class="dot" style="background:var(--high)"></span><div><b>Steep overhang, 62°</b><br><span style="color:var(--muted)">→ Enable tree supports at 55° threshold</span></div></div>
+            <div class="issue"><span class="dot" style="background:var(--med)"></span><div><b>Thin wall, 0.6 mm</b><br><span style="color:var(--muted)">→ Use 2 perimeters with 0.3 mm line width</span></div></div>
+            <div class="issue"><span class="dot" style="background:var(--low)"></span><div><b>Mesh is manifold</b><br><span style="color:var(--muted)">No holes or flipped normals</span></div></div>
+          </div>
+          <div class="col chat">
+            <div class="label">AI ASSISTANT</div>
+            <p>Hi! I've analyzed your model. Ask me about supports, orientation or settings.</p>
+            <p class="me">Will it spaghetti?</p>
+            <p>Low risk if you rotate it 15° and add a 5 mm brim. Want me to apply that?</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <section id="features">
+    <div class="wrap">
+      <h2>Everything that ruins a print, caught up front</h2>
+      <p class="sub">PastaaMasta reads your model's geometry and flags the problems that turn a 9-hour print into a pile of spaghetti.</p>
+      <div class="grid">
+        <div class="card"><div class="ic">🧩</div><h3>Mesh integrity</h3><p>Finds non-manifold edges, holes and flipped normals that confuse your slicer.</p></div>
+        <div class="card"><div class="ic">📐</div><h3>Overhang detection</h3><p>Highlights unsupported angles and shows exactly where supports are needed.</p></div>
+        <div class="card"><div class="ic">🧱</div><h3>Thin walls</h3><p>Spots walls too thin for your nozzle before they disappear in the slice.</p></div>
+        <div class="card"><div class="ic">🏝️</div><h3>Islands</h3><p>Catches floating regions that start mid-air and drag the whole print down.</p></div>
+        <div class="card"><div class="ic">🍝</div><h3>Spaghetti risk score</h3><p>A single 0–100 printability score so you know whether to hit print.</p></div>
+        <div class="card"><div class="ic">🤖</div><h3>AI slicer advice</h3><p>Recommended supports, orientation, layer height and material tips, with a chat to ask follow-ups.</p></div>
+        <div class="card"><div class="ic">🧊</div><h3>3D viewer and layer preview</h3><p>Orbit your model on the build plate and scrub through layers.</p></div>
+        <div class="card"><div class="ic">🌲</div><h3>Support generator</h3><p>Generates support pillars and estimates the extra material.</p></div>
+        <div class="card"><div class="ic">💸</div><h3>Cost and time estimate</h3><p>Print time, filament use, cost and a suggested sell price for each part.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="how" style="padding-top:0">
+    <div class="wrap">
+      <h2>How it works</h2>
+      <p class="sub">Three steps between your STL and a confident print.</p>
+      <div class="steps">
+        <div class="step"><h3>Drop your STL</h3><p>Binary or ASCII, up to 500 MB. Set your printer profile once.</p></div>
+        <div class="step"><h3>Get the report</h3><p>Printability score, every detected issue, and a fix for each one.</p></div>
+        <div class="step"><h3>Print with confidence</h3><p>Apply the AI settings and send the model to ElegooSlicer in one click.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section style="padding-top:0">
+    <div class="wrap">
+      <div class="privacy">
+        <h2>Your models stay on your Mac</h2>
+        <p>All geometry analysis runs locally. Your STL files are never uploaded to analyze them.</p>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <span>© 2026 Neeberman Digital</span>
+    <a href="mailto:neebermandigital@gmail.com">neebermandigital@gmail.com</a>
+  </div>
+</footer>
+
+</body>
+</html>
