@@ -78,12 +78,6 @@
     background: linear-gradient(transparent, var(--ink));
   }
   #spray { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 1; cursor: crosshair; }
-  .boom {
-    position: absolute; z-index: 0; width: 620px; right: -60px; top: 50%; transform: translateY(-50%);
-    mix-blend-mode: screen; opacity: .55; pointer-events: none;
-    -webkit-mask-image: radial-gradient(closest-side, #000 60%, transparent);
-            mask-image: radial-gradient(closest-side, #000 60%, transparent);
-  }
   .hero .wrap { position: relative; z-index: 2; pointer-events: none; padding-top: 60px; padding-bottom: 110px; width: 100%; }
   .hero .wrap a, .hero .wrap button { pointer-events: auto; }
   .tape {
@@ -289,7 +283,6 @@
     .media { justify-content: center; }
     .phone { width: 210px; }
     .phone.small { width: 130px; }
-    .boom { width: 420px; right: -140px; opacity: .4; }
   }
   @media (max-width: 640px) {
     nav a:not(.keep) { display: none; }
@@ -320,7 +313,6 @@
 
 <main>
   <div class="hero">
-    <video class="boom" data-src="assets/fx/boom.mp4" muted loop playsinline aria-hidden="true"></video>
     <canvas id="spray" aria-hidden="true"></canvas>
     <div class="wrap">
       <span class="tape">Indie Android games &amp; apps</span>
